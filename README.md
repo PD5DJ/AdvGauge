@@ -1,3 +1,5 @@
+![](https://manual.hobby4life.nl/ethos-lua.gif)
+
 # AdvGauge
  ETHOS - Advanced Gauge Widget
 
