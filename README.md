@@ -9,7 +9,7 @@ Advanced Gauge is a next level gauge compared to the standard ETHOS gauge widget
 
 The gauge is more flexible:
 
-Features are:
+## Features are:
 
 - Gauge can be Horizontal or Vertical
 
@@ -23,6 +23,10 @@ Features are:
   - Take any (Lipo) Voltage Source, enter the amount of cells used, And the gauge acts like a Lipo checker.
   - Note, do not use this function for accurate measurements, it just gives you an some sort of aproximate readout.
 
+  ## Installation
+  
+  Copy **advgauge.lua** to you ETHOS SD Card, in the **SCRIPTS** folder
+  
   
 
 ![Example widgets](images/widget_1.png)
