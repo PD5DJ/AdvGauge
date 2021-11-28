@@ -23,8 +23,8 @@ Features are:
 
   
 
-![Example widgets](images\widget_1.png)
+![Example widgets](images/widget_1.png)
 
-![Setting up in Range mode](images\widget_2.png)
+![Setting up in Range mode](images/widget_2.png)
 
-![Setting up Lipo](images\widget_3.png)
+![Setting up Lipo](images/widget_3.png)
