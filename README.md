@@ -1,5 +1,5 @@
 # AdvGauge
- ETHOS - Advance Gauge Widget
+ ETHOS - Advanced Gauge Widget
 
 ------
 
