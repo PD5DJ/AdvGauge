@@ -117,7 +117,7 @@ local function CalcPercent(Voltage_Source, Cell_Count)
     end
   
 end
-
+--[[
 local function menu(widget)
     return {
         {"Advanced Gauge v"..version,
@@ -127,7 +127,7 @@ local function menu(widget)
          end},
     }
 end
-
+--]]
 local function paint(widget)
     local w, h = lcd.getWindowSize()
 
