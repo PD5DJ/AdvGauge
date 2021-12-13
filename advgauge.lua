@@ -137,13 +137,13 @@ local function paint(widget)
 
     -- Define positions
     if h < 50 then
-        lcd.setFont(XS)
+        lcd.font(XS)
     elseif h < 80 then
-        lcd.setFont(S)
+        lcd.font(S)
     elseif h > 170 then
-        lcd.setFont(XL)
+        lcd.font(XL)
     else
-        lcd.setFont(STD)
+        lcd.font(STD)
     end
     text_w, text_h = lcd.getTextSize("")
     box_top = text_h
@@ -174,14 +174,14 @@ local function paint(widget)
     end
 
     -- Gauge background
-    lcd.setColor(200, 200, 200)
+    lcd.color(200, 200, 200)
     lcd.drawFilledRectangle(box_left, box_top, box_width, box_height)
 
     -- Gauge color
     if widget.lipo == 1 then
-      lcd.setColor(getPercentColor(Percent))
+      lcd.color(getPercentColor(Percent))
     else
-      lcd.setColor(widget.r, widget.g, widget.b)
+      lcd.color(widget.r, widget.g, widget.b)
     end
 
     -- Gauge Percentage to width calculation
@@ -196,14 +196,14 @@ local function paint(widget)
     end
     
     -- Gauge frame outline
-    lcd.setColor(0, 0, 0)
+    lcd.color(0, 0, 0)
     lcd.drawRectangle(box_left, box_top, box_width, box_height)
     lcd.drawRectangle(box_left +1, box_top +1 , box_width -2, box_height -2)
 
     -- Gauge percentage
     if widget.PercReadout == 1 then
       lcd.drawText((box_left + box_width / 2) + 1, (box_top + (box_height - text_h) / 2) + 1, math.floor(Percent).."%", CENTERED)
-      lcd.setColor(255, 255, 255)
+      lcd.color(255, 255, 255)
       lcd.drawText(box_left + box_width / 2, box_top + (box_height - text_h) / 2, math.floor(Percent).."%", CENTERED)
     end
 end
@@ -226,7 +226,7 @@ local function wakeup(widget)
         
         if widget.value ~= newValue then
             widget.value = newValue
-            lcd.invalidateWindow()
+            lcd.invalidate()
         end
     end
 end
@@ -307,9 +307,9 @@ local function read(widget)
     widget.source = storage.readSource()
     widget.min = storage.readNumber()
     widget.max = storage.readNumber()
-    widget.r = storage.readNumber()
-    widget.g = storage.readNumber()
-    widget.b = storage.readNumber()    
+    widget.r = storage.readInteger()
+    widget.g = storage.readInteger()
+    widget.b = storage.readInteger()    
     widget.cells = storage.readNumber()
     widget.lipo = storage.readNumber()
     widget.alignment = storage.readNumber()
@@ -322,9 +322,9 @@ local function write(widget)
     storage.writeSource(widget.source)
     storage.writeNumber(widget.min)
     storage.writeNumber(widget.max)
-    storage.writeNumber(widget.r)
-    storage.writeNumber(widget.g)
-    storage.writeNumber(widget.b)    
+    storage.writeInteger(widget.r)
+    storage.writeInteger(widget.g)
+    storage.writeInteger(widget.b)    
     storage.writeNumber(widget.cells)
     storage.writeNumber(widget.lipo)
     storage.writeNumber(widget.alignment)
