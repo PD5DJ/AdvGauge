@@ -38,7 +38,7 @@ local function name(widget)
 end
 
 local function create()
-    return {r=255, g=255, b=255, lipo=0, alignment=0, PercReadout = 1, factor=0, min=-1024, max=1024, value=0, cells=6}
+    return {color=lcd.RGB(0xEA, 0x5E, 0x00), lipo=0, alignment=0, PercReadout = 1, factor=0, min=-1024, max=1024, value=0, cells=6}
 end
 
 local function getPercentColor(percent)
@@ -117,7 +117,7 @@ local function CalcPercent(Voltage_Source, Cell_Count)
     end
   
 end
---[[
+
 local function menu(widget)
     return {
         {"Advanced Gauge v"..version,
@@ -127,7 +127,7 @@ local function menu(widget)
          end},
     }
 end
---]]
+
 local function paint(widget)
     local w, h = lcd.getWindowSize()
 
@@ -137,13 +137,13 @@ local function paint(widget)
 
     -- Define positions
     if h < 50 then
-        lcd.font(XS)
+        lcd.font(FONT_XS)
     elseif h < 80 then
-        lcd.font(S)
+        lcd.font(FONT_S)
     elseif h > 170 then
-        lcd.font(XL)
+        lcd.font(FONT_XL)
     else
-        lcd.font(STD)
+        lcd.font(FONT_STD)
     end
     text_w, text_h = lcd.getTextSize("")
     box_top = text_h
@@ -174,14 +174,14 @@ local function paint(widget)
     end
 
     -- Gauge background
-    lcd.color(200, 200, 200)
+    lcd.color(lcd.RGB(200, 200, 200))
     lcd.drawFilledRectangle(box_left, box_top, box_width, box_height)
 
     -- Gauge color
     if widget.lipo == 1 then
-      lcd.color(getPercentColor(Percent))
+      lcd.color(lcd.RGB(getPercentColor(Percent)))
     else
-      lcd.color(widget.r, widget.g, widget.b)
+      lcd.color(widget.color)
     end
 
     -- Gauge Percentage to width calculation
@@ -196,14 +196,12 @@ local function paint(widget)
     end
     
     -- Gauge frame outline
-    lcd.color(0, 0, 0)
+    lcd.color(lcd.RGB(0, 0, 0))
     lcd.drawRectangle(box_left, box_top, box_width, box_height)
     lcd.drawRectangle(box_left +1, box_top +1 , box_width -2, box_height -2)
 
     -- Gauge percentage
     if widget.PercReadout == 1 then
-      lcd.drawText((box_left + box_width / 2) + 1, (box_top + (box_height - text_h) / 2) + 1, math.floor(Percent).."%", CENTERED)
-      lcd.color(255, 255, 255)
       lcd.drawText(box_left + box_width / 2, box_top + (box_height - text_h) / 2, math.floor(Percent).."%", CENTERED)
     end
 end
@@ -246,7 +244,7 @@ local function configure(widget)
     
     -- Color
     line = form.addLine("Gauge Color")
-    widget.field_color = form.addColorField(line, form.getFieldSlots(line)[0], function() return widget.r, widget.g, widget.b end, function(r, g, b) widget.r, widget.g, widget.b = r, g, b end)
+    widget.field_color = form.addColorField(line, nil, function() return widget.color end, function(color) widget.color = color end)
     widget.field_color:enable(not widget.lipo)
     
     -- Range Min & Max
@@ -260,7 +258,7 @@ local function configure(widget)
 
     -- Range Multiplier
     line = form.addLine("Range Multiplier")
-    widget.field_factor = form.addChoiceField(line, form.getFieldSlots(line)[0], {{"x 100", 1}, {"x 10",2}, {"None", 0}, {"/ 10", 3}, {"/ 100", 4}}, function() return widget.factor end, function(value) widget.factor = value end)   
+    widget.field_factor = form.addChoiceField(line, form.getFieldSlots(line)[0], {{"x 100", 1}, {"x 10",2}, {"default", 0}, {"/ 10", 3}, {"/ 100", 4}}, function() return widget.factor end, function(value) widget.factor = value end)   
 
     -- LiPo
     line = form.addLine("Lipo Calculation")
@@ -307,9 +305,7 @@ local function read(widget)
     widget.source = storage.readSource()
     widget.min = storage.readNumber()
     widget.max = storage.readNumber()
-    widget.r = storage.readInteger()
-    widget.g = storage.readInteger()
-    widget.b = storage.readInteger()    
+    widget.color = storage.readInteger()
     widget.cells = storage.readNumber()
     widget.lipo = storage.readNumber()
     widget.alignment = storage.readNumber()
@@ -322,9 +318,7 @@ local function write(widget)
     storage.writeSource(widget.source)
     storage.writeNumber(widget.min)
     storage.writeNumber(widget.max)
-    storage.writeInteger(widget.r)
-    storage.writeInteger(widget.g)
-    storage.writeInteger(widget.b)    
+    storage.writeInteger(widget.color)
     storage.writeNumber(widget.cells)
     storage.writeNumber(widget.lipo)
     storage.writeNumber(widget.alignment)
