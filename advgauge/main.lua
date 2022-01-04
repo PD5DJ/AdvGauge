@@ -20,7 +20,7 @@
 ---- ##########################################################################################################
 
 
-local version = "1.0.6"
+local version = "1.0.7"
 local translations = {en="Advanced Gauge"}
 local wait_end   = 0
 local Cell_Count = 1

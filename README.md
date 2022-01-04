@@ -34,6 +34,10 @@ The gauge is more flexible:
 
   **Revisions:**
 
+  v1.07
+  
+  - Scripts File/Folder structure changed. Only compatible with v1.1.0 Alpha 14 or later.
+  
   v1.06
 
   - Now possible to set enable/disable Gradient independent from Lipo selection
