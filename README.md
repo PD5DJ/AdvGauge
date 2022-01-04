@@ -1,4 +1,4 @@
-![](https://manual.hobby4life.nl/ethos-lua.gif)
+![Example widgets](images/widget_1.png)
 
 # AdvGauge
 
@@ -52,8 +52,6 @@ The gauge is more flexible:
   
 
   
-
-![Example widgets](images/widget_1.png)
 
 ![Setting up in Range mode](images/widget_2.png)
 
