@@ -20,7 +20,7 @@
 ---- ##########################################################################################################
 
 
-local version = "1.0.5"
+local version = "1.0.6"
 local translations = {en="Advanced Gauge"}
 local wait_end   = 0
 local Cell_Count = 1
@@ -38,17 +38,41 @@ local function name(widget)
 end
 
 local function create()
-    return {color=lcd.RGB(0xEA, 0x5E, 0x00), lipo=0, alignment=0, PercReadout = 1, factor=0, min=-1024, max=1024, value=0, cells=6}
+    return {
+            color=lcd.RGB(0xEA, 0x5E, 0x00),
+            lipo=false,
+            alignment=0,
+            PercReadout = true,
+            factor=0,
+            min=-1024,
+            max=1024,
+            value=0,
+            cells=6,
+            Gradient=false,
+            ThresholdPerc=30,
+            Threshold=false,
+            Gradient_inverse=false,
+            }
 end
 
-local function getPercentColor(percent)
-    if Percent < 30 then
-        return 0xFF, 0, 0
+local function getPercentColor(percent,widget)
+    if widget.Gradient_inverse then
+      if widget.Threshold then
+        if percent > widget.ThresholdPerc then
+          return 0xFF, 0, 0
+        end
+      end
+      g = math.floor(0xDF * ((100 - percent) / 100))
     else
-        g = math.floor(0xDF * Percent / 100)
-        r = 0xDF - g
-        return r, g, 0
+      if widget.Threshold then
+        if percent < widget.ThresholdPerc then
+          return 0xFF, 0, 0
+        end
+      end
+      g = math.floor(0xDF * (percent / 100))
     end
+      r = 0xDF - g
+      return r, g, 0  
 end
 
 function no_battery()
@@ -83,8 +107,6 @@ local function CalcPercent(Voltage_Source, Cell_Count)
      -- starting from 3.0 V to 4.2 V , in steps of 0.01 V 
     Voltage_Filtered = Voltage_Filtered * 0.9  +  Voltage_Source * 0.1
  
- print("Votlage_Source: ", Voltage_Source)
-      
     local Percent_Table = 
     {0  , 1  , 1  ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 ,  1 , 
      2  , 2  , 2  ,  2 ,  2 ,  2 ,  2 ,  2 ,  2 ,  2 ,  3 ,  3 ,  3 ,  3 ,  3 ,  3 ,  3 ,  3 ,  3 ,  3 , 
@@ -118,15 +140,6 @@ local function CalcPercent(Voltage_Source, Cell_Count)
   
 end
 
-local function menu(widget)
-    return {
-        {"Advanced Gauge v"..version,
-         function()
-             lcd.drawNumber(box_left +10, box_top + 10, Percent)
-             system.playNumber(Percent, UNIT_PERCENT, 0)
-         end},
-    }
-end
 
 local function paint(widget)
     local w, h = lcd.getWindowSize()
@@ -134,6 +147,10 @@ local function paint(widget)
     if widget.source == nil then
         return
     end
+    
+    if widget.value == nil then
+        return
+    end    
 
     -- Define positions
     if h < 50 then
@@ -160,7 +177,7 @@ local function paint(widget)
     
     
     -- Compute percentage
-    if widget.lipo == 1 then
+    if widget.lipo then
       Percent = CalcPercent(widget.value, widget.cells)
     else
       Percent = (widget.value - widget.min) / (widget.max - widget.min) * 100  
@@ -178,8 +195,8 @@ local function paint(widget)
     lcd.drawFilledRectangle(box_left, box_top, box_width, box_height)
 
     -- Gauge color
-    if widget.lipo == 1 then
-      lcd.color(lcd.RGB(getPercentColor(Percent)))
+    if widget.Gradient then
+      lcd.color(lcd.RGB(getPercentColor(Percent,widget)))
     else
       lcd.color(widget.color)
     end
@@ -201,16 +218,19 @@ local function paint(widget)
     lcd.drawRectangle(box_left +1, box_top +1 , box_width -2, box_height -2)
 
     -- Gauge percentage
-    if widget.PercReadout == 1 then
+    if widget.PercReadout then
       lcd.drawText(box_left + box_width / 2, box_top + (box_height - text_h) / 2, math.floor(Percent).."%", CENTERED)
     end
+    
 end
 
 local function wakeup(widget)
     if widget.source then
-        local newValue = widget.source:value()
+      local newValue = widget.source:value()
+
+
         
-        if widget.lipo == 0 then
+        if widget.lipo == false then
           if widget.factor == 1 then
             newValue = newValue * 100
           elseif widget.factor == 2 then
@@ -237,15 +257,49 @@ local function configure(widget)
     -- Alignment
     line = form.addLine("Alignment")
     local field_alignment = form.addChoiceField(line, form.getFieldSlots(line)[0], {{"Horizontal", 0}, {"Vertical", 1}}, function() return widget.alignment end, function(value) widget.alignment = value end)
-    
-    -- Percentange Readout
+
     line = form.addLine("Percentage Visbible")
-    local field_PercReadout = form.addChoiceField(line, form.getFieldSlots(line)[0], {{"Yes", 1}, {"No", 0}}, function() return widget.PercReadout end, function(value) widget.PercReadout = value end)   
+    local field_PercReadout = form.addBooleanField(line, form.getFieldSlots(line)[0], function() return widget.PercReadout end, function(value) widget.PercReadout = value end)
+    
     
     -- Color
     line = form.addLine("Gauge Color")
     widget.field_color = form.addColorField(line, nil, function() return widget.color end, function(color) widget.color = color end)
     widget.field_color:enable(not widget.lipo)
+    
+ -- Gradient
+    line = form.addLine("Color Gradient")
+    local field_Gradient = form.addBooleanField(line, form.getFieldSlots(line)[0],
+      function() return widget.Gradient end,
+        function(value)
+          widget.Gradient = value
+            widget.field_color:enable(not value)
+            widget.field_Threshold:enable(value)
+            widget.field_Gradient_inverse:enable(value)
+        end)     
+    
+    -- Gradient Inverse
+    line = form.addLine("Gradient Inverse")
+    local Gradient_inverse_slots = form.getFieldSlots(line, {0})
+    widget.field_Gradient_inverse = form.addBooleanField(line, form.getFieldSlots(line)[0], function() return widget.Gradient_inverse end, function(value) widget.Gradient_inverse = value end) 
+    widget.field_Gradient_inverse:enable(widget.Gradient)
+    
+ -- Use Red Threshold
+    line = form.addLine("Red Threshold")
+    local  Theshold_slots = form.getFieldSlots(line, {0})
+    widget.field_Threshold = form.addBooleanField(line, form.getFieldSlots(line)[0],
+      function() return widget.Threshold end,
+        function(value)
+          widget.Threshold = value
+            widget.field_ThresholdPerc:enable(value)
+        end)     
+    widget.field_Threshold:enable(widget.Gradient)
+    
+    -- Threshold
+    line = form.addLine("Threshold %")
+    local ThresholdPerc_slots = form.getFieldSlots(line, {0})
+    widget.field_ThresholdPerc = form.addNumberField(line, ThresholdPerc_slots[1], 0, 100, function() return widget.ThresholdPerc end, function(value) widget.ThresholdPerc = value end);
+    widget.field_ThresholdPerc:enable(widget.Theshold)
     
     -- Range Min & Max
     line = form.addLine("Range")
@@ -256,21 +310,17 @@ local function configure(widget)
     widget.field_max = form.addNumberField(line, slots[3], -1024, 1024, function() return widget.max end, function(value) widget.max = value end);
     widget.field_max:enable(not widget.lipo)
 
+
     -- Range Multiplier
     line = form.addLine("Range Multiplier")
     widget.field_factor = form.addChoiceField(line, form.getFieldSlots(line)[0], {{"x 100", 1}, {"x 10",2}, {"default", 0}, {"/ 10", 3}, {"/ 100", 4}}, function() return widget.factor end, function(value) widget.factor = value end)   
 
     -- LiPo
     line = form.addLine("Lipo Calculation")
-    local field_lipo = form.addChoiceField(line, form.getFieldSlots(line)[0], {{"No", 0}, {"Yes", 1}},
+    local field_lipo = form.addBooleanField(line, form.getFieldSlots(line)[0],
       function() return widget.lipo end,
         function(value)
             widget.lipo = value
-            if value == 1 then
-              value = true
-            else
-              value = false
-            end
             widget.field_min:enable(not value)
             widget.field_max:enable(not value)
             widget.field_color:enable(not value)
@@ -281,7 +331,7 @@ local function configure(widget)
     
     -- Cell count
     line = form.addLine("Cells")
-    widget.field_cells = form.addChoiceField(line, form.getFieldSlots(line)[0], {{"1 Cell", 1}, {"2 Cells", 2}, {"3 Cells", 3}, {"4 Cells", 4}, {"5 Cells", 5}, {"6 Cells", 6}, {"7 Cells", 7}, {"8 Cells", 8}, {"9 Cells", 9}, {"10 Cells", 10}, {"11 Cells", 11}, {"12 Cells", 12}}, function() return widget.cells end, function(value) widget.cells = value end)
+    widget.field_cells = form.addChoiceField(line, form.getFieldSlots(line)[0], {{"1 Cell", 1}, {"2 Cells", 2}, {"3 Cells", 3}, {"4 Cells", 4}, {"5 Cells", 5}, {"6 Cells", 6}, {"7 Cells", 7}, {"8 Cells", 8}, {"9 Cells", 9}, {"10 Cells", 10}, {"11 Cells", 11}, {"12 Cells", 12}, {"13 Cells", 13}, {"14 Cells", 14}}, function() return widget.cells end, function(value) widget.cells = value end)
     widget.field_cells:enable(widget.lipo)   
     
     -- Visibility of fields entering configuration
@@ -302,28 +352,35 @@ local function configure(widget)
 end
 
 local function read(widget)
-    widget.source = storage.readSource()
-    widget.min = storage.readNumber()
-    widget.max = storage.readNumber()
-    widget.color = storage.readInteger()
-    widget.cells = storage.readNumber()
-    widget.lipo = storage.readNumber()
-    widget.alignment = storage.readNumber()
-    widget.PercReadout = storage.readNumber()
-    widget.factor = storage.readNumber()
-    
+    widget.source = storage.read("source")
+    widget.min = storage.read("min")
+    widget.max = storage.read("max")
+    widget.color = storage.read("color")
+    widget.cells = storage.read("cells")
+    widget.lipo = storage.read("lipo")
+    widget.alignment = storage.read("alignment")
+    widget.PercReadout = storage.read("PercReadout")
+    widget.factor = storage.read("factor")
+    widget.Gradient = storage.read("Gradient")
+    widget.Threshold = storage.read("Threshold")    
+    widget.ThresholdPerc = storage.read("ThresholdPerc")
+    widget.Gradient_inverse = storage.read("Gradient inverse")
 end
 
 local function write(widget)
-    storage.writeSource(widget.source)
-    storage.writeNumber(widget.min)
-    storage.writeNumber(widget.max)
-    storage.writeInteger(widget.color)
-    storage.writeNumber(widget.cells)
-    storage.writeNumber(widget.lipo)
-    storage.writeNumber(widget.alignment)
-    storage.writeNumber(widget.PercReadout)
-    storage.writeNumber(widget.factor)
+    storage.write("source",widget.source)
+    storage.write("min",widget.min)
+    storage.write("max",widget.max)
+    storage.write("color",widget.color)
+    storage.write("cells",widget.cells)
+    storage.write("lipo",widget.lipo)
+    storage.write("alignment",widget.alignment)
+    storage.write("PercReadout",widget.PercReadout)
+    storage.write("factor",widget.factor)
+    storage.write("Gradient",widget.Gradient)
+    storage.write("Threshold",widget.Threshold)
+    storage.write("ThresholdPerc",widget.ThresholdPerc)
+    storage.write("Gradient Inverse",widget.Gradient_inverse)
 end
 
 local function init()
