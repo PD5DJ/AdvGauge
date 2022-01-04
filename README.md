@@ -37,6 +37,7 @@ The gauge is more flexible:
   v1.07
   
   - Scripts File/Folder structure changed. Only compatible with v1.1.0 Alpha 14 or later.
+	You need to copy the folder **advgauge** directly into your **\scripts** folder
   
   v1.06
 
