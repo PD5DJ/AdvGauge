@@ -2,6 +2,10 @@
 
 # AdvGauge
 
+ ## SUPPORT DISCONTINUED!
+ 
+ ------
+
  ETHOS - Advanced Gauge Widget
 
 ------
